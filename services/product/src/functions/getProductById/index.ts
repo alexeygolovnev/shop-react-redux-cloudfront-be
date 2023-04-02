@@ -1,9 +1,8 @@
 import { ServerlessFunction } from '@Types';
 import { handlerPath } from '@Utils';
 
-
 export default {
-  handler: `${handlerPath(__dirname)}/handler.main`,
+  handler: `${handlerPath(__dirname)}/handler.getProductById`,
   events: [
     {
       http: {

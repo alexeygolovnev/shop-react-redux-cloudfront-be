@@ -1,7 +1,10 @@
-import { ValidatedEventAPIGatewayProxyEvent } from './apiGateway';
+import { ValidatedEventAPIGatewayProxyEvent, ValidatedAPIGatewayProxyEvent } from './apiGateway';
 import { ServerlessFunction } from './serverlessFunction';
+import ErrorResponse from './errorResponse';
 
 export {
     ValidatedEventAPIGatewayProxyEvent,
-    ServerlessFunction
+    ValidatedAPIGatewayProxyEvent,
+    ServerlessFunction,
+    ErrorResponse
 }

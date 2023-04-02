@@ -1,9 +1,8 @@
-import { productsMock } from '@Mocks';
 import { ValidatedEventAPIGatewayProxyEvent } from '@Types';
-import { formatJSONResponse, middyfy } from '@Utils';
+import { formatJSONResponse } from '@Utils';
+import db from '@Db';
 
-const getProducts: ValidatedEventAPIGatewayProxyEvent<null> = async () => {
-  return formatJSONResponse('success', productsMock);
+export const getProducts: ValidatedEventAPIGatewayProxyEvent<null> = async () => {
+  const products = await db.getProducts();
+  return formatJSONResponse('success', products);
 };
-
-export const main = middyfy(getProducts);

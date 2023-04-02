@@ -5,7 +5,7 @@ import { getProductById, getProducts } from '@Functions';
 const serverlessConfiguration: AWS = {
   service: 'product',
   frameworkVersion: '3',
-  plugins: ['serverless-esbuild', 'serverless-openapi-documentation'],
+  plugins: ['serverless-esbuild'],
   provider: {
     name: 'aws',
     runtime: 'nodejs14.x',
@@ -32,7 +32,7 @@ const serverlessConfiguration: AWS = {
       define: { 'require.resolve': undefined },
       platform: 'node',
       concurrency: 10,
-    }
+    },
   },
 };
 

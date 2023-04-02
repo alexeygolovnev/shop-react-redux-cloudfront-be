@@ -1,14 +1,16 @@
 import { ValidatedEventAPIGatewayProxyEvent } from '@Types';
-import { formatJSONResponse, middyfy } from '@Utils';
-import { productsMock } from '@Mocks';
+import { formatJSONResponse } from '@Utils';
+import db from '@Db';
 
 import schema from './schema';
 
-const getProductById: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (event) => {
+export const getProductById: ValidatedEventAPIGatewayProxyEvent<typeof schema> = async (event) => {
   const { productId } = event.pathParameters;
-  const product = productsMock.find((product) => product.id === productId);
+  const product = await db.getProductById(productId)
+  
+  if (!product) {
+    return formatJSONResponse('failed', { code: null, message: `Product with id ${productId} not found` });
+  }
 
   return formatJSONResponse('success', { ...product });
 };
-
-export const main = middyfy(getProductById);
