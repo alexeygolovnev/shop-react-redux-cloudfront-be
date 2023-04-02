@@ -1,7 +1,6 @@
-export default interface Product {
-    title: string;
-    price: number;
-    count: number;
-    id?: string;
-    description?: string;
-}
+import { productSchema } from "@Schemas";
+import { FromSchema } from "json-schema-to-ts";
+
+type Product = FromSchema<typeof productSchema>;
+
+export default Product;

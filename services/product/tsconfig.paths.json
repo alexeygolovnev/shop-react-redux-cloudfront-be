@@ -8,6 +8,7 @@
       "@Models": ["src/models"],
       "@Mocks": ["src/mocks"],
       "@Db": ["src/db"],
+      "@Schemas": ["src/schemas"],
     }
   }
 }
