@@ -9,6 +9,7 @@
       "@Mocks": ["src/mocks"],
       "@Db": ["src/db"],
       "@Schemas": ["src/schemas"],
+      "@Resources": ["src/resources"],
     }
   }
 }

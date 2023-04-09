@@ -1,6 +1,7 @@
 import type { AWS } from '@serverless/typescript';
 
 import { getProductById, getProducts } from '@Functions';
+import { dynamoDbResource } from '@Resources';
 
 const serverlessConfiguration: AWS = {
   service: 'product',
@@ -18,7 +19,27 @@ const serverlessConfiguration: AWS = {
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
+      PRODUCTS_TABLE: { Ref: dynamoDbResource.products.Properties.TableName },
     },
+    iamRoleStatements: [
+      {
+        Effect: 'Allow',
+        Action: [
+          'dynamodb:DescribeTable',
+          'dynamodb:Query',
+          'dynamodb:Scan',
+          'dynamodb:GetItem',
+          'dynamodb:PutItem',
+          'dynamodb:UpdateItem',
+          'dynamodb:DeleteItem',
+        ],
+        Resource: [
+          {
+            "Fn::GetAtt": [dynamoDbResource.products.Properties.TableName, 'Arn'],
+          }
+        ],
+      }
+    ]
   },
   functions: { getProducts, getProductById },
   package: { individually: true },
@@ -34,6 +55,11 @@ const serverlessConfiguration: AWS = {
       concurrency: 10,
     },
   },
+  resources: {
+    Resources: {
+      ...dynamoDbResource,
+    }
+  }
 };
 
 module.exports = serverlessConfiguration;
