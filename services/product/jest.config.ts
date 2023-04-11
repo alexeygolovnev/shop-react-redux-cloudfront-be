@@ -1,19 +1,17 @@
 import { Config } from 'jest';
+import { pathsToModuleNameMapper } from 'ts-jest';
+import { compilerOptions } from './tsconfig.paths.json';
 
 const config: Config = {
     verbose: true,
     transform: {
         '^.+\\.ts?$': 'esbuild-jest',
     },
+    testEnvironment: 'node',
+    roots: ['<rootDir>'],
     clearMocks: true,
-    moduleNameMapper: {
-        '^@Utils(.*)$': "<rootDir>/src/utils$1",
-        '^@Db(.*)$': "<rootDir>/src/db$1",
-        '^@Types(.*)$': "<rootDir>/src/types$1",
-        '^@Mocks(.*)$': "<rootDir>/src/mocks$1",
-        '^@Models(.*)$': "<rootDir>/src/models$1",
-        '^@Functions(.*)$': "<rootDir>/src/functions$1",
-    }
+    modulePaths: [compilerOptions.baseUrl],,
+    moduleNameMapper: pathsToModuleNameMapper(compilerOptions.paths),
 }
 
 export default config;
