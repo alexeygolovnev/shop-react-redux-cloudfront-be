@@ -10,6 +10,8 @@
       "@Db": ["src/db"],
       "@Schemas": ["src/schemas"],
       "@Resources": ["src/resources"],
+      "@Services": ["src/services"],
+      "@DTOs/*": ["src/dtos/*"]
     }
   }
 }

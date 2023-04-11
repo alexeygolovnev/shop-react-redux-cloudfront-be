@@ -1,14 +1,9 @@
 import { ErrorResponse } from "@Types";
-import { APIGatewayProxyResult } from "aws-lambda";
+import { APIGatewayProxyResultV2 } from "aws-lambda";
 
-const formatJSONResponse = (status: 'success' | 'failed', response: Record<string, unknown> | Array<unknown> | ErrorResponse): APIGatewayProxyResult  => {
-    const statusCodeMapper: Record<typeof status, number> = {
-        success: 200,
-        failed: 400,
-    }
-
+const formatJSONResponse = (status: number, response: Record<string, unknown> | Array<unknown> | ErrorResponse): APIGatewayProxyResultV2  => {
     return {
-      statusCode: statusCodeMapper[status],
+      statusCode: status,
       body: JSON.stringify(response),
       headers: {
         'Access-Control-Allow-Origin': '*',
