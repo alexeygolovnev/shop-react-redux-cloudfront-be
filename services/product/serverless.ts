@@ -1,6 +1,7 @@
 import type { AWS } from '@serverless/typescript';
 
-import { getProductById, getProducts } from '@Functions';
+import { getProductById, getProducts, runSeeds, createProduct } from '@Functions';
+import { dynamoDbResource } from '@Resources';
 
 const serverlessConfiguration: AWS = {
   service: 'product',
@@ -15,12 +16,41 @@ const serverlessConfiguration: AWS = {
       minimumCompressionSize: 1024,
       shouldStartNameWithService: true,
     },
+    httpApi: {
+      cors: true,
+      payload: '2.0',
+    },
     environment: {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
+      PRODUCTS_TABLE: { Ref: dynamoDbResource!.Resources!.products!.Properties!.TableName },
+      STOCKS_TABLE: { Ref: dynamoDbResource!.Resources!.stocks!.Properties!.TableName },
     },
+    iamRoleStatements: [
+      {
+        Effect: 'Allow',
+        Action: [
+          'dynamodb:DescribeTable',
+          'dynamodb:Query',
+          'dynamodb:Scan',
+          'dynamodb:GetItem',
+          'dynamodb:PutItem',
+          'dynamodb:UpdateItem',
+          'dynamodb:DeleteItem',
+          'dynamodb:BatchWriteItem',
+        ],
+        Resource: [
+          {
+            "Fn::GetAtt": [dynamoDbResource!.Resources!.products!.Properties!.TableName, 'Arn'],
+          },
+          {
+            "Fn::GetAtt": [dynamoDbResource!.Resources!.stocks!.Properties!.TableName, 'Arn']
+          },
+        ],
+      }
+    ]
   },
-  functions: { getProducts, getProductById },
+  functions: { getProducts, getProductById, runSeeds, createProduct },
   package: { individually: true },
   custom: {
     esbuild: {
@@ -34,6 +64,11 @@ const serverlessConfiguration: AWS = {
       concurrency: 10,
     },
   },
+  resources: {
+    Resources: {
+      ...dynamoDbResource!.Resources,
+    }
+  }
 };
 
 module.exports = serverlessConfiguration;

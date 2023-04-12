@@ -1,5 +1,4 @@
-import productSchema from './product';
+import * as product from './product';
+import * as stock from './stock';
 
-export {
-    productSchema
-}
+export { product, stock };

@@ -5,17 +5,9 @@ export default {
   handler: `${handlerPath(__dirname)}/handler.getProductById`,
   events: [
     {
-      http: {
+      httpApi: {
         method: 'get',
-        path: 'products/{productId}',
-        request: {
-          parameters: {
-            paths: {
-              productId: true,
-            }
-          }
-        },
-        cors: true,
+        path: '/products/{productId}',
       },
     },
   ],

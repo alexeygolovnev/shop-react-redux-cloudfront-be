@@ -1,42 +1,64 @@
+import { dynamoDbClient } from '@Db';
 import { getProductById } from './handler';
-import { baseEventMock, productsMock } from '@Mocks';
+import { baseEventMock, productsMock, productsWithStocksMock } from '@Mocks';
+import { ProductService, StockService } from '@Services';
 import { ErrorResponse } from '@Types';
-import { APIGatewayProxyResult } from 'aws-lambda';
+import { APIGatewayProxyResultV2 } from 'aws-lambda';
+import { formatJSONResponse } from '@Utils';
+
+jest.spyOn(ProductService.prototype, 'getProductById')
+  .mockResolvedValueOnce(productsMock[0])
+  .mockResolvedValueOnce(null);
+
+jest.spyOn(StockService.prototype, 'getStockByProductId')
+  .mockResolvedValue({ productId: productsMock[0].id, count: productsWithStocksMock[0].count })
 
 describe('Unit test for getProductById lambda', () => {
+    let productService;
+    let stockService;
+
+    beforeEach(() => {
+        productService = new ProductService(dynamoDbClient, 'products');
+        stockService = new StockService(dynamoDbClient, 'stocks');
+    });
+
+    it('services should be defined', () => {
+        expect(productService).toBeDefined();
+        expect(stockService).toBeDefined();
+    });
+
     it('should have correct response', async () => {
-        const productId = '1';
-        const res: APIGatewayProxyResult = await getProductById({
+        const productId = productsMock[0].id;
+        const res: APIGatewayProxyResultV2 = await getProductById({
             ...baseEventMock,
-            body: null,
+            body: { productId },
             pathParameters: { productId },
             path: '/products/{productId}',
             requestContext: {
                 ...baseEventMock.requestContext,
-                path: '/dev/products/{productId}',
+                path: '/products/{productId}',
                 resourcePath: '/products/{productId}'
             }
-        }, null, null) as APIGatewayProxyResult;
+        }, null, null) as APIGatewayProxyResultV2;
 
-        expect(res.statusCode).toBe(200);
-        expect(res.body).toEqual(JSON.stringify(productsMock.find((product) => product.id === productId)));
+        expect(res).toEqual(formatJSONResponse(200, { ...productsWithStocksMock.find((product) => product.id === productId)}));
     })
 
     it('should have error response', async () => {
         const productId = '1000';
-        const res: APIGatewayProxyResult = await getProductById({
+        const res: APIGatewayProxyResultV2 = await getProductById({
             ...baseEventMock,
-            body: null,
+            body: { productId },
             pathParameters: { productId },
             path: '/products/{productId}',
             requestContext: {
                 ...baseEventMock.requestContext,
-                path: '/dev/products/{productId}',
+                path: '/products/{productId}',
                 resourcePath: '/products/{productId}'
-            }
-        }, null, null) as APIGatewayProxyResult;
-
-        expect(res.statusCode).toBe(400);
+            },
+            resource: '/products/{productId}'
+            
+        }, null, null) as APIGatewayProxyResultV2;
 
         const errorResponse: ErrorResponse = {
             code: null,

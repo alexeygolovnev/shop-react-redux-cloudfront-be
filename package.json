@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/alexeygolovnev/shop-react-redux-cloudfront-be/issues"
   },
-  "homepage": "https://github.com/alexeygolovnev/shop-react-redux-cloudfront-be#readme"
+  "homepage": "https://github.com/alexeygolovnev/shop-react-redux-cloudfront-be#readme",
+  "dependencies": {
+    "ajv": "^8.12.0"
+  }
 }

@@ -1,5 +1,6 @@
-import Db from './db';
+import { insertSeeds } from './seeds/run';
+import { DocumentClient } from "aws-sdk/clients/dynamodb";
 
-const db = new Db();
+const dynamoDbClient = new DocumentClient();
 
-export default db;
+export { insertSeeds, dynamoDbClient };

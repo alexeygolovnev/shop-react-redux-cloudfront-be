@@ -1,3 +1,4 @@
 import Product from './product';
+import Stock from './stock';
 
-export { Product }
+export { Product, Stock }
