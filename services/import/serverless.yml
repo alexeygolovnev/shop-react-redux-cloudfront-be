@@ -1,0 +1,79 @@
+service: import
+frameworkVersion: '3'
+provider:
+  name: aws
+  runtime: nodejs14.x
+  profile: ahalauneu
+  region: ${self:custom.region}
+  httpApi:
+    cors: true
+    payload: '2.0'
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:PutObject
+        - s3:DeleteObject
+      Resource: !Join ["/", [!GetAtt UploadFileBucket.Arn, "*"]]
+
+custom:
+  filesBucketName: products-files-ahalauneu
+  filesBucketUploadFolder: uploaded
+  filesBucketParseFolder: parsed
+  region: us-east-1
+  esbuild:
+      bundle: true
+      minify: false
+      sourcemap: true
+      exclude: 'aws-sdk'
+      target: 'node14'
+      platform: 'node'
+      concurrency: 10
+
+plugins:
+  - serverless-esbuild
+
+functions:
+  importProductsFile: 
+      handler: importFileHandler.handler
+      description: Function for getting signed url for specific file name.
+      environment:
+        BUCKET_NAME: !Ref UploadFileBucket
+        REGION: ${self:custom.region}
+        UPLOAD_FOLDER: ${self:custom.filesBucketUploadFolder}
+      events:
+        - httpApi:
+           method: get
+           path: /import
+  parseImportedFile: 
+      handler: parseImportedFileHandler.handler
+      description: Function for imported file parsing.
+      environment:
+        BUCKET_NAME: !Ref UploadFileBucket
+        REGION: ${self:custom.region}
+        UPLOAD_FOLDER: ${self:custom.filesBucketUploadFolder}
+        PARSE_FOLDER: ${self:custom.filesBucketParseFolder}
+      events:
+        - s3: 
+            bucket: ${self:custom.filesBucketName}
+            event: s3:ObjectCreated:*
+            rules: 
+              - prefix: ${self:custom.filesBucketUploadFolder}/
+            existing: true
+
+resources:
+  Resources:
+    UploadFileBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.filesBucketName}
+        CorsConfiguration:
+          CorsRules:
+            -
+              AllowedOrigins:
+                - '*'
+              AllowedHeaders:
+                - '*'
+              AllowedMethods:
+                - PUT
+              MaxAge: 3000
