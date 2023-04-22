@@ -1,7 +1,7 @@
 import type { AWS } from '@serverless/typescript';
 
 import { getProductById, getProducts, runSeeds, createProduct, catalogBatchProcess } from '@Functions';
-import { dynamoDbResource, catalogItemsQueueResource } from '@Resources';
+import { dynamoDbResource, catalogItemsQueueResource, createProductTopicResource, createProductSubscriptionExclusivePriceResource, createProductSubscriptionCommonResource } from '@Resources';
 
 const serverlessConfiguration: AWS = {
   service: 'product',
@@ -27,6 +27,9 @@ const serverlessConfiguration: AWS = {
       STOCKS_TABLE: { Ref: dynamoDbResource!.stocks!.Properties!.TableName },
       ACCOUNT_ID: '390857316109',
       CATALOG_ITEMS_QUEUE: 'catalogItemsQueue',
+      REGION: '${self:provider.region}',
+      CREATE_PRODUCT_TOPIC: 'createProductTopic',
+      CREATE_PRODUCT_TOPIC_ARN: 'arn:aws:sns:${self:provider.region}:390857316109:createProductTopic'
     },
     iamRoleStatements: [
       {
@@ -58,6 +61,11 @@ const serverlessConfiguration: AWS = {
             "Fn::GetAtt": [catalogItemsQueueResource!.catalogItemsQueue!.Properties!.QueueName, 'Arn'],
           },
         ]
+      },
+      {
+        Effect: 'Allow',
+        Action: 'SNS:*',
+        Resource: ['arn:aws:sns:us-east-1:390857316109:createProductTopic']
       }
     ]
   },
@@ -74,11 +82,16 @@ const serverlessConfiguration: AWS = {
       platform: 'node',
       concurrency: 10,
     },
+    commonProductPriceEmail: 'golovnevalexey@gmail.com',
+    exclusiveProductPriceEmail: 'golovnevalexey@yandex.by',
   },
   resources: {
     Resources: {
       ...dynamoDbResource,
       ...catalogItemsQueueResource,
+      ...createProductTopicResource,
+      ...createProductSubscriptionExclusivePriceResource,
+      ...createProductSubscriptionCommonResource,
     }
   }
 };
