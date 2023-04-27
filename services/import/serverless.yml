@@ -15,11 +15,17 @@ provider:
         - s3:PutObject
         - s3:DeleteObject
       Resource: !Join ["/", [!GetAtt UploadFileBucket.Arn, "*"]]
+    - Effect: Allow
+      Action:
+        - SQS:*
+      Resource: 'arn:aws:sqs:${self:custom.region}:${self:custom.accountId}:${self:custom.catalogItemsQueue}'
 
 custom:
   filesBucketName: products-files-ahalauneu
   filesBucketUploadFolder: uploaded
   filesBucketParseFolder: parsed
+  accountId: 390857316109
+  catalogItemsQueue: catalogItemsQueue
   region: us-east-1
   esbuild:
       bundle: true
@@ -53,6 +59,8 @@ functions:
         REGION: ${self:custom.region}
         UPLOAD_FOLDER: ${self:custom.filesBucketUploadFolder}
         PARSE_FOLDER: ${self:custom.filesBucketParseFolder}
+        CATALOG_ITEMS_QUEUE: ${self:custom.catalogItemsQueue}
+        ACCOUNT_ID: ${self:custom.accountId}
       events:
         - s3: 
             bucket: ${self:custom.filesBucketName}
@@ -77,3 +85,5 @@ resources:
               AllowedMethods:
                 - PUT
               MaxAge: 3000
+
+  
