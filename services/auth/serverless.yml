@@ -1,0 +1,30 @@
+service: authorization
+frameworkVersion: '3'
+provider: 
+  name: aws
+  runtime: nodejs14.x
+  profile: ahalauneu
+  region: us-east-1
+  stage: dev
+  httpApi: 
+    cors: true
+  
+
+functions:
+  baseAuth: 
+      handler: baseAuthHandler.handler
+      description: Base authorization function.
+
+custom:
+  esbuild:
+    bundle: true
+    minify: false
+    sourcemap: true
+    exclude: 'aws-sdk'
+    target: 'node14'
+    platform: 'node'
+    concurrency: 10
+
+plugins:
+  - serverless-esbuild
+  - serverless-dotenv-plugin

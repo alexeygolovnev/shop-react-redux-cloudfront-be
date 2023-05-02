@@ -5,9 +5,17 @@ provider:
   runtime: nodejs14.x
   profile: ahalauneu
   region: ${self:custom.region}
-  httpApi:
+  stage: dev
+  httpApi: 
     cors: true
-    payload: '2.0'
+    authorizers:
+      base64TokenAuth:
+        functionArn: arn:aws:lambda:us-east-1:390857316109:function:authorization-dev-baseAuth
+        type: request
+        enableSimpleResponses: true
+        payloadVersion: '2.0'
+
+
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -51,6 +59,9 @@ functions:
         - httpApi:
            method: get
            path: /import
+           authorizer: 
+            name: base64TokenAuth
+
   parseImportedFile: 
       handler: parseImportedFileHandler.handler
       description: Function for imported file parsing.
@@ -85,5 +96,4 @@ resources:
               AllowedMethods:
                 - PUT
               MaxAge: 3000
-
   
