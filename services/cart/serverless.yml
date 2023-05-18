@@ -1,0 +1,25 @@
+service: cart
+plugins:
+ - serverless-offline
+ - serverless-dotenv-plugin
+ - serverless-jetpack
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  profile: ahalauneu
+  region: us-east-1
+  stage: dev
+  httpApi: 
+      cors: true
+
+functions:
+ main:
+    handler: dist/main.handler
+    events:
+      - httpApi:
+          method: ANY
+          path: /
+      - httpApi:
+          method: ANY
+          path: '/{any+}'

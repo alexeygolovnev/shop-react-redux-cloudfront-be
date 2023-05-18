@@ -1,0 +1,395 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "The AWS CloudFormation template for this Serverless application",
+  "Resources": {
+    "ServerlessDeploymentBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ServerlessDeploymentBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "Bucket": {
+          "Ref": "ServerlessDeploymentBucket"
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "s3:*",
+              "Effect": "Deny",
+              "Principal": "*",
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      },
+                      "/*"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:",
+                      {
+                        "Ref": "AWS::Partition"
+                      },
+                      ":s3:::",
+                      {
+                        "Ref": "ServerlessDeploymentBucket"
+                      }
+                    ]
+                  ]
+                }
+              ],
+              "Condition": {
+                "Bool": {
+                  "aws:SecureTransport": false
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "MainLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/cart-dev-main"
+      }
+    },
+    "IamRoleLambdaExecution": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": [
+                "sts:AssumeRole"
+              ]
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Join": [
+                "-",
+                [
+                  "cart",
+                  "dev",
+                  "lambda"
+                ]
+              ]
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:CreateLogGroup",
+                    "logs:TagResource"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/cart-dev*:*"
+                    }
+                  ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/cart-dev*:*:*"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "Path": "/",
+        "RoleName": {
+          "Fn::Join": [
+            "-",
+            [
+              "cart",
+              "dev",
+              {
+                "Ref": "AWS::Region"
+              },
+              "lambdaRole"
+            ]
+          ]
+        }
+      }
+    },
+    "MainLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "ServerlessDeploymentBucket"
+          },
+          "S3Key": "serverless/cart/dev/1684423727105-2023-05-18T15:28:47.105Z/cart.zip"
+        },
+        "Handler": "dist/main.handler",
+        "Runtime": "nodejs14.x",
+        "FunctionName": "cart-dev-main",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "POSTGRES_HOST": "rds-db-instance-name-1.c6ie84avkjoo.us-east-1.rds.amazonaws.com",
+            "POSTGRES_PORT": "5432",
+            "POSTGRES_USER": "postgres",
+            "POSTGRES_PASSWORD": "qwerty123",
+            "POSTGRES_DATABASE": "rds_db_name_1"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "MainLogGroup"
+      ]
+    },
+    "MainLambdaVersionHZpVcRTQlIjdz9zdkxDhqt0CNHntSKlrkgzcCoALFg": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "MainLambdaFunction"
+        },
+        "CodeSha256": "OcoxC8LoFmQDKbkqe7jkDlmJ7qyU7dW0YlGFAOd+I3U="
+      }
+    },
+    "HttpApi": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {
+        "Name": "dev-cart",
+        "ProtocolType": "HTTP",
+        "CorsConfiguration": {
+          "AllowHeaders": [
+            "Content-Type",
+            "X-Amz-Date",
+            "Authorization",
+            "X-Api-Key",
+            "X-Amz-Security-Token",
+            "X-Amz-User-Agent",
+            "X-Amzn-Trace-Id"
+          ],
+          "AllowMethods": [
+            "OPTIONS",
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "HEAD",
+            "DELETE"
+          ],
+          "AllowOrigins": [
+            "*"
+          ]
+        }
+      }
+    },
+    "HttpApiStage": {
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "StageName": "$default",
+        "AutoDeploy": true,
+        "DefaultRouteSettings": {
+          "DetailedMetricsEnabled": false
+        }
+      }
+    },
+    "MainLambdaPermissionHttpApi": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "MainLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition"
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region"
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId"
+              },
+              ":",
+              {
+                "Ref": "HttpApi"
+              },
+              "/*"
+            ]
+          ]
+        }
+      }
+    },
+    "HttpApiIntegrationMain": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::GetAtt": [
+            "MainLambdaFunction",
+            "Arn"
+          ]
+        },
+        "PayloadFormatVersion": "2.0",
+        "TimeoutInMillis": 30000
+      }
+    },
+    "HttpApiRouteAny": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "ANY /",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationMain"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationMain"
+    },
+    "HttpApiRouteAnyAnyVar": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "ANY /{any+}",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationMain"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationMain"
+    }
+  },
+  "Outputs": {
+    "ServerlessDeploymentBucketName": {
+      "Value": {
+        "Ref": "ServerlessDeploymentBucket"
+      },
+      "Export": {
+        "Name": "sls-cart-dev-ServerlessDeploymentBucketName"
+      }
+    },
+    "MainLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "MainLambdaVersionHZpVcRTQlIjdz9zdkxDhqt0CNHntSKlrkgzcCoALFg"
+      },
+      "Export": {
+        "Name": "sls-cart-dev-MainLambdaFunctionQualifiedArn"
+      }
+    },
+    "HttpApiId": {
+      "Description": "Id of the HTTP API",
+      "Value": {
+        "Ref": "HttpApi"
+      },
+      "Export": {
+        "Name": "sls-cart-dev-HttpApiId"
+      }
+    },
+    "HttpApiUrl": {
+      "Description": "URL of the HTTP API",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "HttpApi"
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix"
+            }
+          ]
+        ]
+      },
+      "Export": {
+        "Name": "sls-cart-dev-HttpApiUrl"
+      }
+    }
+  }
+}
